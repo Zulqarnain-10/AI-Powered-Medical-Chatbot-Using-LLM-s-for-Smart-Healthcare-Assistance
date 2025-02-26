@@ -1,0 +1,2 @@
+# AI-Powered-Medical-Chatbot-Using-LLM-s-for-Smart-Healthcare-Assistance
+🚀 AI-Powered Medical Chatbot using LLMs for smart healthcare assistance. It provides real-time medical query responses with NLP, semantic search, and vector embeddings. Built with Python, OpenAI GPT, LangChain, Pinecone, and Flask. 🌐 Cloud-deployed on AWS. 🔹 For informational purposes only, not a replacement for medical advice.
