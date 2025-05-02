@@ -33,5 +33,3 @@ for filepath in list_of_files: # Iterating over the List of Files
             
     else:
         logging.info(f"{filename} is already exists") # File aleeady exists
-        
-        
