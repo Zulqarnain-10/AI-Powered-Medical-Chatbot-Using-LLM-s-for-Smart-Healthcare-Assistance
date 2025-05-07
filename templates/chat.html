@@ -1,39 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
-    <link rel="stylesheet" href="style.css">
-    <title>Chatbot - Brave Coder</title>
+  <meta charset="UTF-8">
+  <title>Medical Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
-    <div class="wrapper">
-        <div class="title">Simple Chatbot</div>
-        <div class="box">
-            <div class="item">
-                <div class="icon">
-                    <i class="fa fa-user"></i>
-                </div>
-                <div class="msg">
-                    <p>Hello everyone, How are you?</p>
-                </div>
+
+<body class="dark-theme">
+  <div class="theme-toggle">
+    <button id="themeButton" onclick="toggleTheme()">🌙</button>
+  </div>
+
+  <div class="text-center title-section">
+    <h1 class="main-title">🏥 AI-Powered Medical Chatbot Using LLMs 🩺</h1>
+    <p class="subtitle">Smart Healthcare Assistance<br>DTSC 870 – MS Project I<br>Syed Zulqarnain Hassan | NYIT | Dr. Frank Lee</p>
+  </div>
+
+  <div class="container-fluid h-100">
+    <div class="row justify-content-center h-100">
+      <div class="col-md-8 col-xl-6 chat">
+        <div class="card">
+          <div class="card-header msg_head">
+            <div class="d-flex bd-highlight">
+              <div class="img_cont">
+                <img src="https://cdn-icons-png.flaticon.com/512/4807/4807695.png" class="rounded-circle user_img">
+                <span class="online_icon"></span>
+              </div>
+              <div class="user_info">
+                <span>Medical Chatbot</span>
+                <p>Ask me anything!</p>
+              </div>
             </div>
-            <br clear="both">
-            <div class="item right">
-                <div class="msg">
-                    <p>Nice</p>
-                </div>
-            </div>
+          </div>
+
+          <div id="messageFormeight" class="card-body msg_card_body"></div>
+
+          <div id="typingIndicator" class="typing-indicator text-left px-3" style="display: none;">
+            <em>Medical Chatbot is typing...</em>
+          </div>
+
+          <div class="card-footer">
+            <form id="messageArea" class="input-group">
+              <input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required>
+              <div class="input-group-append">
+                <button type="submit" id="send" class="input-group-text send_btn">
+                  <i class="fas fa-location-arrow"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="sample-prompts text-center px-3 pb-3">
+            <span class="prompt-bubble">What are the symptoms of diabetes?</span>
+            <span class="prompt-bubble">How to manage blood pressure?</span>
+            <span class="prompt-bubble">What causes migraine headaches?</span>
+          </div>
+
+          <!-- PDF Export Button -->
+          <div class="text-center mb-4">
+            <button class="btn btn-sm btn-outline-light export-btn" onclick="exportChat()">📄 Export Chat as PDF</button>
+          </div>
+
         </div>
-        
-        <div class="typing-area">
-            <div class="input-field">
-                <input type="text" placeholder="Type your message" required>
-                <button>Send</button>
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      $(".prompt-bubble").on("click", function () {
+        $("#text").val($(this).text()).focus();
+      });
+
+      $("#messageArea").on("submit", function (event) {
+        event.preventDefault();
+
+        const date = new Date();
+        const str_time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+        const rawText = $("#text").val();
+
+        const userHtml = `
+        <div class="d-flex justify-content-end mb-4 fade-in">
+          <div class="msg_cotainer_send">${rawText}
+            <span class="msg_time_send">${str_time}</span>
+          </div>
+          <div class="img_cont_msg">
+            <img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg">
+          </div>
+        </div>`;
+
+        $("#text").val("");
+        $("#messageFormeight").append(userHtml);
+        $("#typingIndicator").show();
+
+        $.ajax({
+          data: { msg: rawText },
+          type: "POST",
+          url: "/get"
+        }).done(function (data) {
+          $("#typingIndicator").hide();
+
+          const botHtml = `
+          <div class="d-flex justify-content-start mb-4 fade-in">
+            <div class="img_cont_msg">
+              <img src="https://cdn-icons-png.flaticon.com/512/4807/4807695.png" class="rounded-circle user_img_msg">
+            </div>
+            <div class="msg_cotainer">${data}
+              <span class="msg_time">${str_time}</span>
+            </div>
+          </div>`;
+
+          $("#messageFormeight").append($.parseHTML(botHtml));
+          document.getElementById("messageFormeight").scrollTop = document.getElementById("messageFormeight").scrollHeight;
+        });
+      });
+    });
+
+    function toggleTheme() {
+      const body = document.body;
+      const button = document.getElementById("themeButton");
+      if (body.classList.contains("dark-theme")) {
+        body.classList.remove("dark-theme");
+        body.classList.add("light-theme");
+        button.textContent = "☀️";
+      } else {
+        body.classList.remove("light-theme");
+        body.classList.add("dark-theme");
+        button.textContent = "🌙";
+      }
+    }
+
+    async function exportChat() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const chatArea = document.getElementById("messageFormeight");
+
+      let y = 10;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+
+      chatArea.querySelectorAll(".msg_cotainer, .msg_cotainer_send").forEach((el) => {
+        const label = el.classList.contains("msg_cotainer_send") ? "You: " : "Bot: ";
+        const lines = doc.splitTextToSize(label + el.innerText.trim(), 180);
+        doc.text(lines, 10, y);
+        y += lines.length * 8;
+        if (y > 270) {
+          doc.addPage();
+          y = 10;
+        }
+      });
+
+      doc.save("chat_history.pdf");
+    }
+  </script>
 </body>
 </html>
