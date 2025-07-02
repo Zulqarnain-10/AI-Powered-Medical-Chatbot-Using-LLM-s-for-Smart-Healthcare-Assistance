@@ -1,5 +1,5 @@
 # Importing required libraries and modules
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request # Flask web framework and rendering HTML templates, handling HTTP requests
 from src.helper import download_hugging_face_embeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAI
