@@ -5,9 +5,9 @@ from langchain_pinecone import PineconeVectorStore # Pinecone integration for ve
 from langchain_openai import OpenAI # OpenAI LLM wrapper for LangChain
 from langchain.chains import create_retrieval_chain # Utility to build retrieval-augmented generation chains
 from langchain.chains.combine_documents import create_stuff_documents_chain # Utility to combine retrieved docs with LLM
-from langchain_core.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
-from src.prompt import *
+from langchain_core.prompts import ChatPromptTemplate  # Utility to define structured prompt templates
+from dotenv import load_dotenv # For loading environment variables from a .env file
+from src.prompt import * # Importing custom prompt templates (like system_prompt) from local module
 import os
 
 # Initializing Flask web application
