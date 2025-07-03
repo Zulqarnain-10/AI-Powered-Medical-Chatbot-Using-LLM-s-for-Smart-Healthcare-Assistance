@@ -11,18 +11,18 @@ from src.prompt import * # Importing custom prompt templates (like system_prompt
 import os # Module for interacting with the operating system (env vars, etc.)
 
 # Initializing Flask web application
-app = Flask(__name__)
+app = Flask(__name__) # Creates a Flask app instance
 
 # Loading environment variables from the .env file
-load_dotenv()
+load_dotenv() # Loads variables like API keys from a .env file into environment
 
 # Retrieving API keys from environment
 PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
 # Setting environment variables programmatically (for redundancy/safety)
-os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY # Fetch Pinecone API key
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY # Fetch OpenAI API key
 
 # Initializing Hugging Face embedding model
 embeddings = download_hugging_face_embeddings()
