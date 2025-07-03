@@ -8,7 +8,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain # Ut
 from langchain_core.prompts import ChatPromptTemplate  # Utility to define structured prompt templates
 from dotenv import load_dotenv # For loading environment variables from a .env file
 from src.prompt import * # Importing custom prompt templates (like system_prompt) from local module
-import os
+import os # Module for interacting with the operating system (env vars, etc.)
 
 # Initializing Flask web application
 app = Flask(__name__)
