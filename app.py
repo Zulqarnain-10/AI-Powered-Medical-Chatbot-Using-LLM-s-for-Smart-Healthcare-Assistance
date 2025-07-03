@@ -44,26 +44,28 @@ retriever = docsearch.as_retriever(
 
 # Initializing the OpenAI language model (LLM)
 llm = OpenAI(
-    temperature=0.4,
-    max_tokens=500
-)
+    temperature=0.4, # Lower temperature for more deterministic responses
+    max_tokens=500 # Limit the length of responses
+) # Language model for answering questions
 
 # Creating a prompt template for the conversation using system and user inputs
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),  # Loaded from src/prompt.py
-    ("human", "{input}")
+    ("human", "{input}") # Placeholder for user input
 ])
 
 # Creating a document-processing chain to combine retrieved docs with LLM
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
+# This chain uses the LLM to process and synthesize answers from the retrieved documents
 
 # Creating a retrieval-augmented generation (RAG) chain by linking retriever and QA chain
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+# The main pipeline: retrieve docs, then use LLM to answer based on them
 
 # Home route – loads chat frontend
 @app.route("/")
 def index():
-    return render_template("chat.html")
+    return render_template("chat.html") # Renders the chat user interface
 
 # Chat route – handles user input and returns model response
 @app.route("/get", methods=["GET", "POST"])
@@ -72,8 +74,8 @@ def chat():
     print("User Input:", msg)
 
     # Get response from LangChain RAG pipeline
-    response = rag_chain.invoke({"input": msg})
-    clean_answer = response["answer"]
+    response = rag_chain.invoke({"input": msg}) # Run the full retrieval + LLM pipeline
+    clean_answer = response["answer"] # Extract generated answer
 
     # Remove "System: " prefix if present (case-insensitive)
     if clean_answer.lower().startswith("system:"):
