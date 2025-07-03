@@ -1,7 +1,7 @@
 # Importing required libraries and modules
 from flask import Flask, render_template, request # Flask web framework and rendering HTML templates, handling HTTP requests
-from src.helper import download_hugging_face_embeddings
-from langchain_pinecone import PineconeVectorStore
+from src.helper import download_hugging_face_embeddings # Custom function to download/load Hugging Face embeddings
+from langchain_pinecone import PineconeVectorStore # Pinecone integration for vector storage and search in LangChain
 from langchain_openai import OpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
