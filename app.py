@@ -17,30 +17,30 @@ app = Flask(__name__) # Creates a Flask app instance
 load_dotenv() # Loads variables like API keys from a .env file into environment
 
 # Retrieving API keys from environment
-PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY') # Fetch Pinecone API key
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY') # Fetch OpenAI API key
 
 # Setting environment variables programmatically (for redundancy/safety)
-os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY # Fetch Pinecone API key
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY # Fetch OpenAI API key
+os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY # Ensure Pinecone API key is set in env
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY # Ensure OpenAI API key is set in env
 
 # Initializing Hugging Face embedding model
-embeddings = download_hugging_face_embeddings()
+embeddings = download_hugging_face_embeddings() # Load or download the embeddings model
 
 # Defining the index name used in Pinecone
-index_name = "medicalbot"
+index_name = "medicalbot" # Name of the Pinecone vector index (pre-existing or to be created)
 
 # Creating Pinecone vector store using the existing index and embedding model
 docsearch = PineconeVectorStore.from_existing_index(
     index_name=index_name,
     embedding=embeddings
-)
+) # Sets up a vector store for semantic document search
 
 # Creating a retriever object to fetch top 3 relevant documents based on similarity
 retriever = docsearch.as_retriever(
     search_type="similarity",
     search_kwargs={"k": 3}
-)
+) # Retriever for top 3 most similar documents
 
 # Initializing the OpenAI language model (LLM)
 llm = OpenAI(
