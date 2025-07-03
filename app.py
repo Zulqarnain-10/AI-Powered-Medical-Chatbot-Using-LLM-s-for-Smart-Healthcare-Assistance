@@ -79,11 +79,11 @@ def chat():
 
     # Remove "System: " prefix if present (case-insensitive)
     if clean_answer.lower().startswith("system:"):
-        clean_answer = clean_answer[len("system:"):].strip()
+        clean_answer = clean_answer[len("system:"):].strip() # Clean up formatting
 
     print("Response:", clean_answer)
-    return clean_answer
+    return clean_answer # Return the response to the frontend
 
 # Run Flask server on localhost
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True) # Start Flask development server (accessible on all interfaces)
