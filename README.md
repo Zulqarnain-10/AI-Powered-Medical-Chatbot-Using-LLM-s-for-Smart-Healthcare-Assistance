@@ -27,6 +27,8 @@
 - **Additional:** Jupyter Notebook for prototyping and data analysis
 
 ---
+![4](https://github.com/user-attachments/assets/4969e5fe-2686-4e90-b36d-95be0b7f92b2)
+
 
 ## 🚀 Getting Started
 
@@ -88,6 +90,8 @@ The chatbot will be available at `http://127.0.0.1:5000/`.
 4. **Response Delivery:** The answer is displayed to the user in real-time.
 
 ---
+
+![5](https://github.com/user-attachments/assets/c8d0e81c-2818-4a2e-af67-625c2f4ce4d6)
 
 ## 📦 Deployment
 
