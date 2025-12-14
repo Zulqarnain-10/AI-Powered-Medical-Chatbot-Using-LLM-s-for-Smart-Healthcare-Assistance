@@ -3,7 +3,7 @@ body, html {
     margin: 0;
     height: 100%;
     transition: background 0.4s, color 0.4s;
-  }
+  } 
   
   body.dark-theme {
     background: linear-gradient(to right, #26333d, #323741, #21214e);
