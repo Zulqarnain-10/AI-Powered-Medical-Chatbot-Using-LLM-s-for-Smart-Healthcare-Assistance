@@ -1,122 +1,74 @@
-# AI-Powered Medical Chatbot Using LLMs for Smart Healthcare Assistance
+# MedBot — AI Medical Q&A Assistant (RAG)
 
-🚀 **AI-Powered Medical Chatbot** leverages advanced Large Language Models (LLMs) to provide real-time medical query responses and smart healthcare assistance. This project incorporates natural language processing (NLP), semantic search, and vector embeddings to deliver accurate and context-aware answers to users' healthcare-related questions.
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-web%20app-000000?logo=flask&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-RAG-1C3C3C?logo=langchain&logoColor=white)
+![Pinecone](https://img.shields.io/badge/Pinecone-vector%20DB-111827)
+![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?logo=openai&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-> **Disclaimer:**  
-> This chatbot is for informational purposes only and is not intended to replace professional medical advice, diagnosis, or treatment.
+> A retrieval-augmented chatbot that answers medical questions from a curated medical reference — grounding every reply in retrieved passages to reduce hallucination.
 
----
+> **Disclaimer:** For informational purposes only. Not a substitute for professional medical advice, diagnosis, or treatment.
 
-## 🌟 Features
+## Problem
 
-- **AI-Powered Responses:** Utilizes OpenAI GPT models for understanding and responding to natural language medical queries.
-- **Semantic Search:** Integrates vector embeddings and semantic similarity (via Pinecone) to retrieve the most relevant medical information.
-- **Real-Time Answers:** Fast, cloud-deployed responses for user convenience.
-- **User-Friendly Interface:** Built with Flask, HTML, and CSS for an accessible web experience.
-- **Scalable & Cloud-Ready:** Deployable on AWS for production-scale use.
-- **Secure & Private:** Designed with user privacy in mind.
+General LLMs answer medical questions from parametric memory, with no grounding and no traceable source — risky for health information. A safer pattern constrains answers to a trusted medical reference and retrieves relevant passages before generating a response.
 
----
+## Approach
 
-## 🛠️ Tech Stack
+MedBot is a Retrieval-Augmented Generation (RAG) pipeline over a medical reference text:
 
-- **Backend:** Python, Flask
-- **AI/ML:** OpenAI GPT, LangChain, Pinecone (Vector Database)
-- **Frontend:** HTML, CSS
-- **Deployment:** AWS Cloud
-- **Additional:** Jupyter Notebook for prototyping and data analysis
+- **Ingest & index** — load the source PDF (`Data/`), split into overlapping chunks (`RecursiveCharacterTextSplitter`, 500 / 20), embed with HuggingFace **`all-MiniLM-L6-v2`** (384-dim), and upsert into a **Pinecone** serverless index (cosine similarity). Run once via `store_index.py`.
+- **Retrieve & answer** — at query time, embed the question, retrieve the most similar chunks from Pinecone, and pass them as context to an **OpenAI** chat model through LangChain's `create_retrieval_chain`. The system prompt constrains the model to the retrieved context and to reply "I don't know" when the answer isn't supported.
+- **Serve** — a **Flask** web UI for real-time chat.
 
----
-![4](https://github.com/user-attachments/assets/4969e5fe-2686-4e90-b36d-95be0b7f92b2)
+## Results
 
+- Answers are **grounded in retrieved passages** from the medical reference rather than free-form generation, and kept concise (≤ 3 sentences).
+- The assistant **declines** when the retrieved context doesn't support an answer, reducing confident hallucination.
 
-## 🚀 Getting Started
+> No formal accuracy benchmark is included yet. A labeled evaluation set (precision / recall / F1 over a question bank) is on the roadmap.
 
-### 1. Clone the Repository
+## Tech stack
+
+`Python` · `Flask` · `LangChain` · `Pinecone` · `HuggingFace Sentence-Transformers (all-MiniLM-L6-v2)` · `OpenAI API` · `PyPDF`
+
+## Demo
+
+![MedBot chat interface](https://github.com/user-attachments/assets/4969e5fe-2686-4e90-b36d-95be0b7f92b2)
+![MedBot answering a query](https://github.com/user-attachments/assets/c8d0e81c-2818-4a2e-af67-625c2f4ce4d6)
+
+## How to run
 
 ```bash
+# 1. Clone
 git clone https://github.com/Zulqarnain-10/AI-Powered-Medical-Chatbot-Using-LLM-s-for-Smart-Healthcare-Assistance.git
 cd AI-Powered-Medical-Chatbot-Using-LLM-s-for-Smart-Healthcare-Assistance
-```
 
-### 2. Set Up the Python Environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
+# 2. Environment + dependencies
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+
+# 3. API keys — create a .env file
+#    OPENAI_API_KEY=...
+#    PINECONE_API_KEY=...
+
+# 4. Build the vector index (one-time, reads PDFs from Data/)
+python store_index.py
+
+# 5. Launch
+python app.py
 ```
 
-### 3. Configure Environment Variables
+Then open the local URL shown in the terminal.
 
-Create a `.env` file in the root directory and add your API keys and configuration:
+## Roadmap
 
-```env
-OPENAI_API_KEY=your_openai_api_key
-PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_ENV=your_pinecone_environment
-FLASK_SECRET_KEY=your_secret_key
-```
+- Add a labeled evaluation set and report retrieval/answer quality (precision, recall, F1).
+- Swap in a larger medical corpus and citations back to source passages.
+- Containerize and deploy.
 
-### 4. Run the Application
+## License
 
-```bash
-flask run
-```
-The chatbot will be available at `http://127.0.0.1:5000/`.
-
----
-
-## 🖥️ Project Structure
-
-```
-.
-├── app.py                  # Main Flask application
-├── requirements.txt        # Python dependencies
-├── templates/              # HTML templates
-├── static/                 # CSS and static files
-├── chatbot/                # Core chatbot logic
-├── notebooks/              # Jupyter Notebooks for prototyping
-└── README.md
-```
-
----
-
-## 🧠 How It Works
-
-1. **User Query:** The user submits a medical question via the web interface.
-2. **Semantic Search:** The system uses vector embeddings (Pinecone) to fetch relevant context from medical knowledge bases.
-3. **LLM Response:** OpenAI GPT (via LangChain) generates an informative and context-aware answer.
-4. **Response Delivery:** The answer is displayed to the user in real-time.
-
----
-
-![5](https://github.com/user-attachments/assets/c8d0e81c-2818-4a2e-af67-625c2f4ce4d6)
-
-## 📦 Deployment
-
-The application can be easily deployed on AWS (EC2, Elastic Beanstalk, or similar). Ensure your environment variables are securely set in your deployment environment.
-
----
-
-## 🛡️ Disclaimer
-
-This chatbot is **not a substitute for professional medical advice**. Always consult with a qualified healthcare provider for diagnosis and treatment.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please open issues or pull requests for improvements, bug fixes, or new features.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## 📫 Contact
-
-For questions or suggestions, please open an issue or contact [Zulqarnain-10](https://github.com/Zulqarnain-10).
+MIT — see [LICENSE](LICENSE).
