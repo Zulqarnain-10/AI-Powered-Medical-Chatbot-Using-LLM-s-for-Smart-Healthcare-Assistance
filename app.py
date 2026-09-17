@@ -20,6 +20,13 @@ load_dotenv() # Loads variables like API keys from a .env file into environment
 PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY') # Fetch Pinecone API key
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY') # Fetch OpenAI API key
 
+# Fail fast with a named error instead of an opaque TypeError further down
+if not PINECONE_API_KEY or not OPENAI_API_KEY:
+    raise RuntimeError(
+        "Missing PINECONE_API_KEY and/or OPENAI_API_KEY. "
+        "Set them as Space secrets (Settings -> Variables and secrets) or in a local .env file."
+    )
+
 # Setting environment variables programmatically (for redundancy/safety)
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY # Ensure Pinecone API key is set in env
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY # Ensure OpenAI API key is set in env
@@ -36,15 +43,20 @@ index_name = "medicalbot" # Name of the Pinecone vector index (pre-existing or t
 from pinecone import Pinecone, ServerlessSpec
 pc = Pinecone(api_key=PINECONE_API_KEY)
 if index_name not in [idx.name for idx in pc.list_indexes()]:
-    from src.helper import load_pdf_file, text_split
-    print(f"Pinecone index '{index_name}' not found - building it from Data/ (one-time, several minutes)...")
-    text_chunks = text_split(load_pdf_file(data='Data/'))
     pc.create_index(
         name=index_name,
         dimension=384,
         metric="cosine",
         spec=ServerlessSpec(cloud="aws", region="us-east-1")
     )
+
+# The vector count, not the index's existence, decides whether to ingest: an
+# interrupted first boot leaves the index created but empty, and existence-only
+# checks would skip the build forever after.
+if pc.Index(index_name).describe_index_stats().total_vector_count == 0:
+    from src.helper import load_pdf_file, text_split
+    print(f"Pinecone index '{index_name}' is empty - building it from Data/ (one-time, several minutes)...")
+    text_chunks = text_split(load_pdf_file(data='Data/'))
     PineconeVectorStore.from_documents(
         documents=text_chunks,
         index_name=index_name,
@@ -90,7 +102,7 @@ def index():
     return render_template("chat.html") # Renders the chat user interface
 
 # Chat route – handles user input and returns model response
-@app.route("/get", methods=["GET", "POST"])
+@app.route("/get", methods=["POST"])
 def chat():
     msg = request.form["msg"]  # Get user input from form
     print("User Input:", msg)

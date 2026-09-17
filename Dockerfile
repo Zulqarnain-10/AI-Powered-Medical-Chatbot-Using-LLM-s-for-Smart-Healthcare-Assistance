@@ -8,12 +8,16 @@ ENV HF_HOME=/app/.cache \
     PIP_NO_CACHE_DIR=1 \
     PORT=8080
 
+# CPU-only torch first: the default PyPI wheel drags in multi-GB CUDA libraries
+# this CPU-only container never uses
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt setup.py ./
-COPY src ./src
 RUN pip install -r requirements.txt
 
-# Bake the embedding model into the image so cold starts skip the download
-RUN python -c "from src.helper import download_hugging_face_embeddings; download_hugging_face_embeddings()"
+# Bake the embedding model into the image so cold starts skip the download;
+# kept above the source COPY so code edits never invalidate this layer
+RUN python -c "from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')"
 
 COPY . .
 RUN chmod -R 777 /app
