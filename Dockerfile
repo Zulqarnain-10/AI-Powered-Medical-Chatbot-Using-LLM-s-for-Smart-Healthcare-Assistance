@@ -9,8 +9,9 @@ ENV HF_HOME=/app/.cache \
     PORT=8080
 
 # CPU-only torch first: the default PyPI wheel drags in multi-GB CUDA libraries
-# this CPU-only container never uses
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+# this CPU-only container never uses. PyPI stays available as the extra index for
+# torch's own dependencies; the +cpu local version still outranks PyPI's build.
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
 
 COPY requirements.txt setup.py ./
 RUN pip install -r requirements.txt
