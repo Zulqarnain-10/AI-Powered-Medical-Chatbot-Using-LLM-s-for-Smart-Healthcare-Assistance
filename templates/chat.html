@@ -1,163 +1,197 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Medical Chatbot</title>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <title>MedBot, live demo</title>
+  <meta name="description" content="A retrieval-augmented medical Q&A assistant: answers grounded in a medical reference through Pinecone retrieval, served by Flask. For information only, not medical advice.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F1F38'/%3E%3Cpath d='M12 13 H44 V22.5 L25.5 41.5 H44 V51 H12 V41.5 L30.5 22.5 H12 Z' fill='%23EAF0F9'/%3E%3Ccircle cx='51.5' cy='45.5' r='5.5' fill='%232DD4BF'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
 </head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
 
-<body class="dark-theme">
-  <div class="theme-toggle">
-    <button id="themeButton" onclick="toggleTheme()">🌙</button>
-  </div>
+  <header class="band-dark hero">
+    <div class="wrap">
+      <div class="brand-row">
+        <p class="brand">
+          <svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true" focusable="false">
+            <rect width="64" height="64" rx="14" fill="#0F1F38"/>
+            <path d="M12 13 H44 V22.5 L25.5 41.5 H44 V51 H12 V41.5 L30.5 22.5 H12 Z" fill="#EAF0F9"/>
+            <circle cx="51.5" cy="45.5" r="5.5" fill="#2DD4BF"/>
+          </svg>
+          <span class="wordmark">Syed Zulqarnain Hassan<span class="dot">.</span></span>
+        </p>
+        <a class="repo-link" href="https://github.com/Zulqarnain-10/AI-Powered-Medical-Chatbot-Using-LLM-s-for-Smart-Healthcare-Assistance">GitHub &#8599;</a>
+      </div>
+      <p class="eyebrow">
+        <span class="livedot" aria-hidden="true"></span>
+        <span>Live assistant</span>
+        <span aria-hidden="true">&middot;</span>
+        <span>RAG over a medical reference</span>
+      </p>
+      <h1>A medical assistant that <em>cites its homework.</em></h1>
+      <p class="lede">Ask about a condition, a medicine, or a diagnosis. The answer is not free-form generation: MedBot retrieves the most relevant passages from a medical reference text and the model is constrained to them — when the reference does not support an answer, it says it does not know.</p>
+      <p class="lede disclaimer">For information only. MedBot is a portfolio demonstration, not a substitute for professional medical advice, diagnosis, or treatment. If this is an emergency, contact local emergency services.</p>
+    </div>
+  </header>
 
-  <div class="text-center title-section">
-    <h1 class="main-title">🏥 AI-Powered Medical Chatbot Using LLMs 🩺</h1>
-    <p class="subtitle">Smart Healthcare Assistance<br>DTSC 870 – MS Project I<br>Syed Zulqarnain Hassan | NYIT | Dr. Frank Lee</p>
-  </div>
+  <main id="main">
 
-  <div class="container-fluid h-100">
-    <div class="row justify-content-center h-100">
-      <div class="col-md-8 col-xl-6 chat">
-        <div class="card">
-          <div class="card-header msg_head">
-            <div class="d-flex bd-highlight">
-              <div class="img_cont">
-                <img src="https://cdn-icons-png.flaticon.com/512/4807/4807695.png" class="rounded-circle user_img">
-                <span class="online_icon"></span>
-              </div>
-              <div class="user_info">
-                <span>Medical Chatbot</span>
-                <p>Ask me anything!</p>
+    <section class="section" aria-labelledby="chat-title">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">Try it</span>
+          <h2 id="chat-title">Ask the <em>reference.</em></h2>
+          <p>Three starter questions are below, or type your own. Answers stay within the retrieved passages and are kept to three sentences.</p>
+        </div>
+
+        <div class="chat-grid">
+          <div class="panel chat-panel">
+            <div class="msgs" id="msgs" aria-live="polite">
+              <div class="msg bot">
+                <span class="msg-who">MedBot</span>
+                <p>Hello. Ask me about a condition, a medicine, or a treatment — I answer from the medical reference I was indexed on, and I will tell you when it does not cover something.</p>
               </div>
             </div>
-          </div>
-
-          <div id="messageFormeight" class="card-body msg_card_body"></div>
-
-          <div id="typingIndicator" class="typing-indicator text-left px-3" style="display: none;">
-            <em>Medical Chatbot is typing...</em>
-          </div>
-
-          <div class="card-footer">
-            <form id="messageArea" class="input-group">
-              <input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required>
-              <div class="input-group-append">
-                <button type="submit" id="send" class="input-group-text send_btn">
-                  <i class="fas fa-location-arrow"></i>
-                </button>
-              </div>
+            <div class="suggest" id="suggest" role="group" aria-label="Suggested questions">
+              <button class="btn" type="button" data-q="What is hypertension and how is it treated?">Hypertension</button>
+              <button class="btn" type="button" data-q="What are the symptoms of anemia?">Anemia symptoms</button>
+              <button class="btn" type="button" data-q="What is asthma and what triggers an attack?">Asthma</button>
+            </div>
+            <form class="ask" id="ask">
+              <label class="sr-only" for="msg">Your question</label>
+              <input id="msg" name="msg" type="text" maxlength="500" autocomplete="off" placeholder="Ask a medical question" required>
+              <button class="btn btn-primary" type="submit" id="send">Ask</button>
             </form>
+            <p class="ask-note"><span class="mono">POST /get</span> · retrieval first, then a constrained answer · not medical advice</p>
           </div>
-
-          <div class="sample-prompts text-center px-3 pb-3">
-            <span class="prompt-bubble">What are the symptoms of diabetes?</span>
-            <span class="prompt-bubble">How to manage blood pressure?</span>
-            <span class="prompt-bubble">What causes migraine headaches?</span>
-          </div>
-
-          <!-- PDF Export Button -->
-          <div class="text-center mb-4">
-            <button class="btn btn-sm btn-outline-light export-btn" onclick="exportChat()">📄 Export Chat as PDF</button>
-          </div>
-
         </div>
       </div>
+    </section>
+
+    <section class="section" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">How it works</span>
+          <h2 id="how-title">Grounded, not <em>guessing.</em></h2>
+          <p>A retrieval-augmented generation pipeline. The model never answers from memory alone — the reference is retrieved first, every time.</p>
+        </div>
+        <ol class="steps">
+          <li class="panel step">
+            <span class="step-n" aria-hidden="true">01</span>
+            <h3>Ingest &amp; chunk</h3>
+            <p>The medical reference PDF is split into overlapping 500-character chunks, so each passage stays small enough to retrieve precisely.</p>
+          </li>
+          <li class="panel step">
+            <span class="step-n" aria-hidden="true">02</span>
+            <h3>Embed</h3>
+            <p>Every chunk becomes a 384-dimension vector with the open <span class="mono">all-MiniLM-L6-v2</span> sentence-transformer.</p>
+          </li>
+          <li class="panel step">
+            <span class="step-n" aria-hidden="true">03</span>
+            <h3>Retrieve</h3>
+            <p>Your question is embedded the same way, and Pinecone returns the three most similar passages by cosine similarity.</p>
+          </li>
+          <li class="panel step">
+            <span class="step-n" aria-hidden="true">04</span>
+            <h3>Answer</h3>
+            <p>An OpenAI model writes a concise answer constrained to those passages — and declines when they do not support one.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="band-dark foot">
+    <div class="wrap">
+      <p class="foot-name">
+        <svg class="mark" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true" focusable="false">
+          <rect width="64" height="64" rx="14" fill="#0F1F38"/>
+          <path d="M12 13 H44 V22.5 L25.5 41.5 H44 V51 H12 V41.5 L30.5 22.5 H12 Z" fill="#EAF0F9"/>
+          <circle cx="51.5" cy="45.5" r="5.5" fill="#2DD4BF"/>
+        </svg>
+        <span class="wordmark">Syed Zulqarnain Hassan<span class="dot">.</span></span>
+      </p>
+      <p class="foot-role">Data Scientist &amp; AI/ML Engineer</p>
+      <ul class="foot-links">
+        <li><a href="https://github.com/Zulqarnain-10/AI-Powered-Medical-Chatbot-Using-LLM-s-for-Smart-Healthcare-Assistance">GitHub repo</a></li>
+        <li><a href="https://zulqarnainhassan.com">zulqarnainhassan.com</a></li>
+        <li><a href="https://www.linkedin.com/in/syedzulqarnainh">LinkedIn</a></li>
+      </ul>
+      <p class="foot-note">Answers are generated from a medical reference text for demonstration purposes and can be wrong or incomplete. Nothing here is medical advice, diagnosis, or treatment. Do not use MedBot for real health decisions.</p>
     </div>
-  </div>
+  </footer>
 
   <script>
-    $(document).ready(function () {
-      $(".prompt-bubble").on("click", function () {
-        $("#text").val($(this).text()).focus();
+    (function () {
+      'use strict';
+
+      var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var form = document.getElementById('ask');
+      var input = document.getElementById('msg');
+      var send = document.getElementById('send');
+      var msgs = document.getElementById('msgs');
+      var busy = false;
+
+      function addMsg(kind, who, text) {
+        var box = document.createElement('div');
+        box.className = 'msg ' + kind;
+        var label = document.createElement('span');
+        label.className = 'msg-who';
+        label.textContent = who;
+        var p = document.createElement('p');
+        p.textContent = text;
+        box.appendChild(label);
+        box.appendChild(p);
+        msgs.appendChild(box);
+        msgs.scrollTo({ top: msgs.scrollHeight, behavior: REDUCED ? 'auto' : 'smooth' });
+        return p;
+      }
+
+      function ask(question) {
+        if (busy || !question) return;
+        busy = true;
+        send.disabled = true;
+        addMsg('user', 'You', question);
+        var slot = addMsg('bot pending', 'MedBot', 'Retrieving from the reference…');
+        var body = new FormData();
+        body.append('msg', question);
+        fetch('/get', { method: 'POST', body: body }).then(function (r) {
+          if (!r.ok) throw new Error('status ' + r.status);
+          return r.text();
+        }).then(function (text) {
+          slot.textContent = text.trim() || 'The reference did not return an answer for that.';
+          slot.parentElement.classList.remove('pending');
+        }).catch(function () {
+          slot.textContent = 'Could not reach the assistant. It may be waking up — try again in a moment.';
+          slot.parentElement.classList.remove('pending');
+        }).then(function () {
+          busy = false;
+          send.disabled = false;
+          msgs.scrollTo({ top: msgs.scrollHeight, behavior: REDUCED ? 'auto' : 'smooth' });
+        });
+      }
+
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var q = input.value.trim();
+        if (!q) return;
+        input.value = '';
+        ask(q);
       });
 
-      $("#messageArea").on("submit", function (event) {
-        event.preventDefault();
-
-        const date = new Date();
-        const str_time = `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-        const rawText = $("#text").val();
-
-        const userHtml = `
-        <div class="d-flex justify-content-end mb-4 fade-in">
-          <div class="msg_cotainer_send">${rawText}
-            <span class="msg_time_send">${str_time}</span>
-          </div>
-          <div class="img_cont_msg">
-            <img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg">
-          </div>
-        </div>`;
-
-        $("#text").val("");
-        $("#messageFormeight").append(userHtml);
-        $("#typingIndicator").show();
-
-        $.ajax({
-          data: { msg: rawText },
-          type: "POST",
-          url: "/get"
-        }).done(function (data) {
-          $("#typingIndicator").hide();
-
-          const botHtml = `
-          <div class="d-flex justify-content-start mb-4 fade-in">
-            <div class="img_cont_msg">
-              <img src="https://cdn-icons-png.flaticon.com/512/4807/4807695.png" class="rounded-circle user_img_msg">
-            </div>
-            <div class="msg_cotainer">${data}
-              <span class="msg_time">${str_time}</span>
-            </div>
-          </div>`;
-
-          $("#messageFormeight").append($.parseHTML(botHtml));
-          document.getElementById("messageFormeight").scrollTop = document.getElementById("messageFormeight").scrollHeight;
+      Array.prototype.forEach.call(document.querySelectorAll('#suggest .btn'), function (b) {
+        b.addEventListener('click', function () {
+          input.value = b.getAttribute('data-q');
+          input.focus();
         });
       });
-    });
-
-    function toggleTheme() {
-      const body = document.body;
-      const button = document.getElementById("themeButton");
-      if (body.classList.contains("dark-theme")) {
-        body.classList.remove("dark-theme");
-        body.classList.add("light-theme");
-        button.textContent = "☀️";
-      } else {
-        body.classList.remove("light-theme");
-        body.classList.add("dark-theme");
-        button.textContent = "🌙";
-      }
-    }
-
-    async function exportChat() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const chatArea = document.getElementById("messageFormeight");
-
-      let y = 10;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-
-      chatArea.querySelectorAll(".msg_cotainer, .msg_cotainer_send").forEach((el) => {
-        const label = el.classList.contains("msg_cotainer_send") ? "You: " : "Bot: ";
-        const lines = doc.splitTextToSize(label + el.innerText.trim(), 180);
-        doc.text(lines, 10, y);
-        y += lines.length * 8;
-        if (y > 270) {
-          doc.addPage();
-          y = 10;
-        }
-      });
-
-      doc.save("chat_history.pdf");
-    }
+    })();
   </script>
 </body>
 </html>
