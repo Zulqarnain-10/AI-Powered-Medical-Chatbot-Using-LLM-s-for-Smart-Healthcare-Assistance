@@ -179,6 +179,7 @@
 
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
+        if (busy) return; // Enter during an in-flight request must not clear the typed question
         var q = input.value.trim();
         if (!q) return;
         input.value = '';
