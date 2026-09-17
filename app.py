@@ -30,6 +30,28 @@ embeddings = download_hugging_face_embeddings() # Load or download the embedding
 # Defining the index name used in Pinecone
 index_name = "medicalbot" # Name of the Pinecone vector index (pre-existing or to be created)
 
+# Building the index once if it does not exist yet, so a fresh deployment
+# (for example a new Hugging Face Space with a fresh Pinecone project) boots
+# itself from Data/ without a separate store_index.py run.
+from pinecone import Pinecone, ServerlessSpec
+pc = Pinecone(api_key=PINECONE_API_KEY)
+if index_name not in [idx.name for idx in pc.list_indexes()]:
+    from src.helper import load_pdf_file, text_split
+    print(f"Pinecone index '{index_name}' not found - building it from Data/ (one-time, several minutes)...")
+    text_chunks = text_split(load_pdf_file(data='Data/'))
+    pc.create_index(
+        name=index_name,
+        dimension=384,
+        metric="cosine",
+        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+    )
+    PineconeVectorStore.from_documents(
+        documents=text_chunks,
+        index_name=index_name,
+        embedding=embeddings
+    )
+    print(f"Pinecone index '{index_name}' built.")
+
 # Creating Pinecone vector store using the existing index and embedding model
 docsearch = PineconeVectorStore.from_existing_index(
     index_name=index_name,
@@ -84,6 +106,6 @@ def chat():
     print("Response:", clean_answer)
     return clean_answer # Return the response to the frontend
 
-# Run Flask server on localhost
+# Run Flask server
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8080, debug=True) # Start Flask development server (accessible on all interfaces)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=False) # Port from env for hosted deployments

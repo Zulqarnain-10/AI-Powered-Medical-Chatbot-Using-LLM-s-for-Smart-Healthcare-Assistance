@@ -1,0 +1,6 @@
+.git
+.gitignore
+research/
+*.egg-info
+__pycache__/
+.env
