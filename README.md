@@ -34,7 +34,9 @@ MedBot is a Retrieval-Augmented Generation (RAG) pipeline over a medical referen
 
 `Python` · `Flask` · `LangChain` · `Pinecone` · `HuggingFace Sentence-Transformers (all-MiniLM-L6-v2)` · `OpenAI API` · `PyPDF`
 
-## Demo
+## Live demo
+
+**Try it now: [syedzulqarnainh-medbot.hf.space](https://syedzulqarnainh-medbot.hf.space)** — hosted on [Hugging Face Spaces](https://huggingface.co/spaces/syedzulqarnainh/medbot). Ask a medical question; answers come only from the indexed reference, and it says "I don't know" when the reference does not cover it. (A sleeping Space takes about a minute to wake for the first visitor.)
 
 ![MedBot chat interface](https://github.com/user-attachments/assets/4969e5fe-2686-4e90-b36d-95be0b7f92b2)
 ![MedBot answering a query](https://github.com/user-attachments/assets/c8d0e81c-2818-4a2e-af67-625c2f4ce4d6)
@@ -67,7 +69,6 @@ Then open the local URL shown in the terminal.
 
 - Add a labeled evaluation set and report retrieval/answer quality (precision, recall, F1).
 - Swap in a larger medical corpus and citations back to source passages.
-- Containerize and deploy.
 
 ## License
 
